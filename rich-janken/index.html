@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サッカーPK戦ゲーム</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <h1>PKゲーム</h1>
+        <div id="game-screen">
+            <img id="goal" src="./img/soccer_goal.jpg" alt="ゴール">
+            <img id="keeper" src="./img/keeper.jpg" alt="キーパー">
+            <img id="kicker" src="./img/kicker.jpg" alt="キッカー">
+            <img id="ball" src="./img/soccer_ball.jpg" alt="ボール" style="display: none;">
+        </div>
+        <div id="direction-buttons">
+            <button onclick="selectDirection('左')">左</button>
+            <button onclick="selectDirection('左上')">左上</button>
+            <button onclick="selectDirection('上')">上</button>
+            <button onclick="selectDirection('右上')">右上</button>
+            <button onclick="selectDirection('右')">右</button>
+            <button onclick="selectDirection('正面')">正面</button>
+        </div>
+        <div id="score">
+            <table>
+                <tr>
+                    <th></th>
+                    <th>1回目</th>
+                    <th>2回目</th>
+                    <th>3回目</th>
+                    <th>4回目</th>
+                    <th>5回目</th>
+                </tr>
+                <tr>
+                    <td>CPU</td>
+                    <td id="player-1"></td>
+                    <td id="player-2"></td>
+                    <td id="player-3"></td>
+                    <td id="player-4"></td>
+                    <td id="player-5"></td>
+                </tr>
+                <tr>
+                    <td>プレイヤー</td>
+                    <td id="cpu-1"></td>
+                    <td id="cpu-2"></td>
+                    <td id="cpu-3"></td>
+                    <td id="cpu-4"></td>
+                    <td id="cpu-5"></td>
+                </tr>
+            </table>
+        </div>
+        <div id="result"></div>
+        <button id="restart-button" style="display: none;" onclick="startGame()">ゲームを再開</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
