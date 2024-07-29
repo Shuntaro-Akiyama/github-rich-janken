@@ -5,6 +5,7 @@ const directions = ['左', '左上', '上', '右上', '右', '正面'];
 let playerDirection = null;
 let isPlayerTurn = false;
 let cpuDirection = null;
+let isPlayerKicker = true; // プレイヤーがキッカーかどうかを示すフラグ
 
 const initialKeeperPosition = { left: 170, top: 150 };
 const initialBallPosition = { left: 190, bottom: 40 };
@@ -23,62 +24,83 @@ function startGame() {
     currentRound = 0;
     playerScore = 0;
     cpuScore = 0;
+    isPlayerKicker = true; // ゲーム開始時はプレイヤーがキッカー
     updateScoreDisplay();
     resetPositions();
     document.getElementById('result').textContent = '';
     document.getElementById('restart-button').style.display = 'none';
-    cpuTurn();
+    nextTurn();
+}
+
+function nextTurn() {
+    if (currentRound >= 10) { // 各プレイヤーが5回ずつキックするため、合計10ラウンド
+        endGame();
+        return;
+    }
+
+    isPlayerTurn = true;
+    if (isPlayerKicker) {
+        document.getElementById('direction-buttons').style.display = 'block';
+        alert(`ラウンド ${Math.floor(currentRound / 2) + 1}: キックの方向を選んでください`);
+    } else {
+        cpuDirection = directions[Math.floor(Math.random() * directions.length)];
+        document.getElementById('direction-buttons').style.display = 'block';
+        alert(`ラウンド ${Math.floor(currentRound / 2) + 1}: キーパーの方向を選んでください`);
+    }
 }
 
 function selectDirection(direction) {
     if (!isPlayerTurn) return;
     playerDirection = direction;
     document.getElementById('direction-buttons').style.display = 'none';
-    processPlayerTurn();
+    processTurn();
 }
 
-function cpuTurn() {
-    if (currentRound >= 5) {
-        endGame();
-        return;
+function processTurn() {
+    isPlayerTurn = false;
+    let attackDirection, defenseDirection;
+    if (isPlayerKicker) {
+        attackDirection = playerDirection;
+        defenseDirection = directions[Math.floor(Math.random() * directions.length)]; // CPUのキーパー方向
+    } else {
+        attackDirection = cpuDirection;
+        defenseDirection = playerDirection;
     }
 
-    isPlayerTurn = true;
-    cpuDirection = directions[Math.floor(Math.random() * directions.length)];
-    playerDirection = null;
-    document.getElementById('direction-buttons').style.display = 'block';
-    alert(`ラウンド ${currentRound + 1}: キーパーの方向を選んでください`);
-}
-
-function processPlayerTurn() {
-    isPlayerTurn = false;
-    const isGoal = calculateResult(cpuDirection, playerDirection);
-    updateScore(isGoal, 'player');
+    const result = calculateResult(attackDirection, defenseDirection);
+    updateScore(result.isGoal, isPlayerKicker ? 'player' : 'cpu');
     currentRound++;
 
-    animateShot(cpuDirection, playerDirection, isGoal);
+    animateShot(attackDirection, defenseDirection, result);
 
     setTimeout(() => {
-        alert(`CPU: ${cpuDirection}\nキーパー: ${playerDirection}\n結果: ${isGoal ? 'ゴール' : '失敗'}`);
+        let resultText = result.isGoal ? 'ゴール' : (result.isMissed ? '枠外' : 'セーブ');
+        alert(`キッカー: ${attackDirection}\nキーパー: ${defenseDirection}\n結果: ${resultText}`);
         resetPositions();
-        cpuTurn();
+        isPlayerKicker = !isPlayerKicker; // キッカーとキーパーの役割を交代
+        nextTurn();
     }, 2500);
 }
 
 function calculateResult(attackDirection, defenseDirection) {
     if (attackDirection === defenseDirection) {
-        return false; // セーブ
+        return { isGoal: false, isMissed: false, isSaved: true }; // キーパーがセーブ
+    } else {
+        if (Math.random() < 0.75) {
+            return { isGoal: true, isMissed: false, isSaved: false }; // 3/4の確率でシュートが決まる
+        } else {
+            return { isGoal: false, isMissed: true, isSaved: false }; // 1/4の確率で枠外
+        }
     }
-    return Math.random() < 0.75; // 75%の確率でゴール
 }
 
 function updateScore(isGoal, turn) {
     if (turn === 'player') {
         if (isGoal) playerScore++;
-        document.getElementById(`player-${currentRound + 1}`).textContent = isGoal ? '○' : '×';
+        document.getElementById(`player-${Math.floor(currentRound / 2) + 1}`).textContent = isGoal ? '○' : '×';
     } else {
         if (isGoal) cpuScore++;
-        document.getElementById(`cpu-${currentRound + 1}`).textContent = isGoal ? '○' : '×';
+        document.getElementById(`cpu-${Math.floor(currentRound / 2) + 1}`).textContent = isGoal ? '○' : '×';
     }
 }
 
@@ -89,14 +111,19 @@ function updateScoreDisplay() {
     }
 }
 
-function animateShot(attackDirection, defenseDirection, isGoal) {
+function animateShot(attackDirection, defenseDirection, result) {
     const keeper = document.getElementById('keeper');
     const ball = document.getElementById('ball');
 
     ball.style.display = 'block';
 
     const keeperPos = positionMap[defenseDirection].keeper;
-    const ballPos = isGoal ? positionMap[attackDirection].ball : (Math.random() < 0.75 ? positionMap[attackDirection].ball : { left: 0, top: -100 });
+    let ballPos;
+    if (result.isMissed) {
+        ballPos = { left: 0, top: 200 };
+    } else if (result.isGoal || result.isSaved) {
+        ballPos = positionMap[attackDirection].ball;
+    }
 
     setTimeout(() => {
         keeper.style.left = (initialKeeperPosition.left + keeperPos.left) + 'px';
@@ -105,7 +132,7 @@ function animateShot(attackDirection, defenseDirection, isGoal) {
         ball.style.left = (initialBallPosition.left + ballPos.left) + 'px';
         ball.style.bottom = (initialBallPosition.bottom + ballPos.top) + 'px';
 
-        if (attackDirection === defenseDirection) {
+        if (result.isSaved) {
             ball.style.zIndex = '4';
             keeper.style.zIndex = '3';
         } else {
