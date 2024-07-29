@@ -5,7 +5,7 @@ const directions = ['左', '左上', '上', '右上', '右', '正面'];
 let playerDirection = null;
 let isPlayerTurn = false;
 let cpuDirection = null;
-let isPlayerKicker = true; // プレイヤーがキッカーかどうかを示すフラグ
+let isPlayerKicker = true;
 
 const initialKeeperPosition = { left: 170, top: 150 };
 const initialBallPosition = { left: 190, bottom: 40 };
@@ -24,7 +24,7 @@ function startGame() {
     currentRound = 0;
     playerScore = 0;
     cpuScore = 0;
-    isPlayerKicker = true; // ゲーム開始時はプレイヤーがキッカー
+    isPlayerKicker = true;
     updateScoreDisplay();
     resetPositions();
     document.getElementById('result').textContent = '';
@@ -33,7 +33,7 @@ function startGame() {
 }
 
 function nextTurn() {
-    if (currentRound >= 10) { // 各プレイヤーが5回ずつキックするため、合計10ラウンド
+    if (currentRound >= 10) {
         endGame();
         return;
     }
@@ -61,7 +61,7 @@ function processTurn() {
     let attackDirection, defenseDirection;
     if (isPlayerKicker) {
         attackDirection = playerDirection;
-        defenseDirection = directions[Math.floor(Math.random() * directions.length)]; // CPUのキーパー方向
+        defenseDirection = directions[Math.floor(Math.random() * directions.length)];
     } else {
         attackDirection = cpuDirection;
         defenseDirection = playerDirection;
@@ -77,19 +77,19 @@ function processTurn() {
         let resultText = result.isGoal ? 'ゴール' : (result.isMissed ? '枠外' : 'セーブ');
         alert(`キッカー: ${attackDirection}\nキーパー: ${defenseDirection}\n結果: ${resultText}`);
         resetPositions();
-        isPlayerKicker = !isPlayerKicker; // キッカーとキーパーの役割を交代
+        isPlayerKicker = !isPlayerKicker;
         nextTurn();
     }, 2500);
 }
 
 function calculateResult(attackDirection, defenseDirection) {
     if (attackDirection === defenseDirection) {
-        return { isGoal: false, isMissed: false, isSaved: true }; // キーパーがセーブ
+        return { isGoal: false, isMissed: false, isSaved: true };
     } else {
         if (Math.random() < 0.75) {
-            return { isGoal: true, isMissed: false, isSaved: false }; // 3/4の確率でシュートが決まる
+            return { isGoal: true, isMissed: false, isSaved: false };
         } else {
-            return { isGoal: false, isMissed: true, isSaved: false }; // 1/4の確率で枠外
+            return { isGoal: false, isMissed: true, isSaved: false };
         }
     }
 }
@@ -121,7 +121,7 @@ function animateShot(attackDirection, defenseDirection, result) {
     let ballPos;
     if (result.isMissed) {
         ballPos = { left: 0, top: 200 };
-    } else if (result.isGoal || result.isSaved) {
+    } else {
         ballPos = positionMap[attackDirection].ball;
     }
 
